@@ -52,18 +52,17 @@ void Server::run()
 				std::cout << "couldn't open fd for new client" << std::endl;
 				continue;
 			}
-			std::cout << "new client !" << std::endl;
 
 			pollfd tmp;
 			tmp.fd = fdClient;
 			tmp.events = 0;
 			tmp.events = POLLIN;
 			_pollFds.push_back(tmp);
-		}
-		else //client sent packet
-		{
-			std::cout << "data received" << std::endl;
 
+			std::cout << '[' << tmp.fd << "]new client !" << std::endl;
+		}
+		else //client sent packet or disconnected
+		{
 			std::string data;
 			char buf[1024];
 			ssize_t bytes_received;
@@ -75,7 +74,16 @@ void Server::run()
 				if (bytes_received < 1024)
 					break;
 			}
-			std::cout << "received: \'" << data << '\'' << std::endl;
+			if (bytes_received == 0)
+				onclientDisconnect(i);
+			else
+				std::cout << '[' << _pollFds[i].fd << "]received: \'" << data << '\'' << std::endl;
 		}
 	}
+}
+
+void Server::onclientDisconnect(std::size_t id)
+{
+	std::cout << '[' << _pollFds[id].fd << "]disconnected" << std::endl;
+	_pollFds.erase(_pollFds.begin() + id);
 }

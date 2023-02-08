@@ -30,6 +30,8 @@ public:
 	void run();
 
 private:
+	void onclientDisconnect(std::size_t id);
+
 	std::string _password;
 
 	sockaddr_in _socketServer;
