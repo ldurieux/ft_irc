@@ -30,7 +30,9 @@ public:
 	void run();
 
 private:
-	void onclientDisconnect(std::size_t id);
+	void onNewConnection(std::size_t id);
+	void onNewData(std::size_t id, const std::string& data);
+	void onClientDisconnect(std::size_t id);
 
 	std::string _password;
 

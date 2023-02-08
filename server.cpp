@@ -30,27 +30,27 @@ void Server::run()
 {
 	while (1)
 	{
-		if (poll(_pollFds.data(), _pollFds.size(), 5000) == 0)
-			continue ;
-
 		std::size_t i;
 		for(i = 0; i < _pollFds.size(); i++)
-			if (poll(_pollFds.data() + i, 1, 1) != 0)
+			if (poll(_pollFds.data() + i, 1, 5) != 0)
 				break;
-		if (i == _pollFds.size())
-		{
-			std::cout << "shouldn't happen" << std::endl;
+		if (i == _pollFds.size()) //no events
 			continue;
-		}
-		if (i == 0) //new connection
+		else if (i == 0) //new connection
 		{
 			sockaddr_in socketClient;
 			socklen_t size = sizeof(sockaddr_in);
 			int fdClient = accept(_fdServer, (sockaddr *)&socketClient, &size);
 			if (fdClient < 0)
 			{
-				std::cout << "couldn't open fd for new client" << std::endl;
+				std::cout << "Couldn't open fd for new client" << std::endl;
 				continue;
+			}
+			//set the fd as non blocking
+			if (fcntl(fdClient, F_SETFL, fcntl(fdClient, F_GETFL) | O_NONBLOCK) == -1)
+			{
+				std::cout << "Couldn't set client fd as non-blocking" << std::endl;
+				return ;
 			}
 
 			pollfd tmp;
@@ -59,31 +59,48 @@ void Server::run()
 			tmp.events = POLLIN;
 			_pollFds.push_back(tmp);
 
-			std::cout << '[' << tmp.fd << "]new client !" << std::endl;
+			onNewConnection(tmp.fd);
 		}
 		else //client sent packet or disconnected
 		{
 			std::string data;
 			char buf[1024];
-			ssize_t bytes_received;
-			while((bytes_received = recv(_pollFds[i].fd, buf, 1024, 0)))
-			{
-				if (bytes_received == -1)
-					break;
-				data.append(buf, bytes_received);
-				if (bytes_received < 1024)
-					break;
-			}
+
+			ssize_t bytes_received = recv(_pollFds[i].fd, buf, 1024, 0);
+
+			//if there was not data on the first recv then it's a disconnected
+			//otherwise it's a message
 			if (bytes_received == 0)
-				onclientDisconnect(i);
-			else
-				std::cout << '[' << _pollFds[i].fd << "]received: \'" << data << '\'' << std::endl;
+			{
+				onClientDisconnect(_pollFds[i].fd);
+				_pollFds.erase(_pollFds.begin() + i);
+				continue ;
+			}
+			else if (bytes_received == -1)
+			{
+				std::cout << "Couldn't read on fd " << _pollFds[i].fd << ", this shouldn't happen" << std::endl;
+				continue;
+			}
+			do {
+				data.append(buf, bytes_received);
+			} while ((bytes_received = recv(_pollFds[i].fd, buf, 1024, 0)) != -1);
+
+			onNewData(_pollFds[i].fd, data);
 		}
 	}
 }
 
-void Server::onclientDisconnect(std::size_t id)
+void Server::onNewConnection(std::size_t id)
 {
-	std::cout << '[' << _pollFds[id].fd << "]disconnected" << std::endl;
-	_pollFds.erase(_pollFds.begin() + id);
+	std::cout << '[' << id << "]new client !" << std::endl;
+}
+
+void Server::onNewData(std::size_t id, const std::string& data)
+{
+	std::cout << '[' << id << "]received: \'" << data << '\'' << std::endl;
+}
+
+void Server::onClientDisconnect(std::size_t id)
+{
+	std::cout << '[' << id << "]disconnected" << std::endl;
 }
