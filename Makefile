@@ -2,10 +2,10 @@ NAME		= ircserv
 
 SRCS		= \
 			  main.cpp \
-			  server.cpp \
+			  srcs/server.cpp \
 
 HEADERS		= \
-			  .
+			  includes
 
 BUILDDIR	= .build
 OBJS		= $(SRCS:%.cpp=$(BUILDDIR)/%.o)
