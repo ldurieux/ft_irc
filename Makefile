@@ -29,8 +29,8 @@ clean :
 fclean : clean
 		-$(RM) $(NAME)
 
-re : fclean all
-		$(MAKE)
+re : fclean
+		$(MAKE) ./ all
 
 -include $(DEPS)
 
