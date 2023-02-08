@@ -2,6 +2,7 @@ NAME		= ircserv
 
 SRCS		= \
 			  main.cpp \
+			  server.cpp \
 
 HEADERS		= \
 			  .

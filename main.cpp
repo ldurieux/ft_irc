@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <limits>
+#include "server.h"
 
 void parseArgs(int& port, std::string& password, int argc, char **argv)
 {
@@ -44,7 +45,18 @@ int main(int argc, char **argv)
 	catch (const std::exception &e) {
 		std::cout << e.what() << std::endl;
 		usage();
+		return 1;
 	}
+
+	Server server(password);
+	if (!server.listen_(port))
+	{
+		std::cout << "Couldn't listen on port " << port << std::endl;
+		return 1;
+	}
+
+	std::cout.setf(std::ios::unitbuf);
+	server.run();
 
 	return 0;
 }
