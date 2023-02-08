@@ -1,5 +1,5 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef BASESERVER_H
+#define BASESERVER_H
 
 #include <iostream>
 #include <string>
@@ -21,19 +21,24 @@
 #include <vector>
 #include <poll.h>
 
-class Server
+class BaseServer
 {
 public:
-	Server(const std::string& password);
+	BaseServer(const std::string& password);
 
 	bool listen_(int port);
 	void run();
 
-private:
-	void onNewConnection(std::size_t id);
-	void onNewData(std::size_t id, const std::string& data);
-	void onClientDisconnect(std::size_t id);
+	const std::string& password() const { return _password; }
 
+protected:
+	virtual void onNewConnection(std::size_t id);
+	virtual void onNewData(std::size_t id, const std::string& data);
+	virtual void onClientDisconnect(std::size_t id);
+
+	void disconnectClient(std::size_t id);
+
+private:
 	std::string _password;
 
 	sockaddr_in _socketServer;
@@ -41,4 +46,4 @@ private:
 	std::vector<pollfd> _pollFds;
 };
 
-#endif // SERVER_H
+#endif // BASESERVER_H

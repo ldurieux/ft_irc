@@ -1,12 +1,12 @@
-#include "server.h"
+#include "baseserver.h"
 
-Server::Server(const std::string& password) :
+BaseServer::BaseServer(const std::string& password) :
 	_password(password)
 {
 	memset((char*)&_socketServer, 0, sizeof(sockaddr_in));
 }
 
-bool Server::listen_(int port)
+bool BaseServer::listen_(int port)
 {
 	_socketServer.sin_family = AF_INET;
 	_socketServer.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -26,7 +26,7 @@ bool Server::listen_(int port)
 	return listen(_fdServer, 3) == 0;
 }
 
-void Server::run()
+void BaseServer::run()
 {
 	while (1)
 	{
@@ -85,22 +85,50 @@ void Server::run()
 				data.append(buf, bytes_received);
 			} while ((bytes_received = recv(_pollFds[i].fd, buf, 1024, 0)) != -1);
 
-			onNewData(_pollFds[i].fd, data);
+			std::string::iterator start = data.begin();
+			for (std::string::iterator it = data.begin(); it != data.end(); ++it)
+			{
+				if (*it == '\n')
+				{
+					onNewData(_pollFds[i].fd, std::string(start, it));
+					start = it + 1;
+				}
+			}
+			if (start + 1 != data.end())
+				onNewData(_pollFds[i].fd, std::string(start, data.end()));
 		}
 	}
 }
 
-void Server::onNewConnection(std::size_t id)
+void BaseServer::onNewConnection(std::size_t id)
 {
 	std::cout << '[' << id << "]new client !" << std::endl;
 }
 
-void Server::onNewData(std::size_t id, const std::string& data)
+void BaseServer::onNewData(std::size_t id, const std::string& data)
 {
 	std::cout << '[' << id << "]received: \'" << data << '\'' << std::endl;
 }
 
-void Server::onClientDisconnect(std::size_t id)
+void BaseServer::onClientDisconnect(std::size_t id)
 {
 	std::cout << '[' << id << "]disconnected" << std::endl;
+}
+
+void BaseServer::disconnectClient(std::size_t id)
+{
+	//get socket pos in vector from it's id
+	std::size_t i;
+	for (i = 1; i < _pollFds.size(); i++)
+	{
+		if ((std::size_t)_pollFds[i].fd == id)
+		{
+			_pollFds.erase(_pollFds.begin() + i);
+			break ;
+		}
+	}
+	if (i == _pollFds.size())
+		std::cout << __PRETTY_FUNCTION__ << " id not found" << std::endl;
+	else
+		std::cout << '[' << id << "]closed" << std::endl;
 }

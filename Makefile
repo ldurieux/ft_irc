@@ -2,7 +2,8 @@ NAME		= ircserv
 
 SRCS		= \
 			  main.cpp \
-			  srcs/server.cpp \
+			  srcs/baseserver.cpp \
+			  srcs/ircserver.cpp \
 
 HEADERS		= \
 			  includes
