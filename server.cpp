@@ -20,7 +20,7 @@ bool Server::listen_(int port)
 
 	pollfd tmp;
 	tmp.fd = _fdServer;
-	tmp.events = 0;
+	tmp.revents = 0;
 	tmp.events = POLLIN;
 	_pollFds.push_back(tmp);
 	return listen(_fdServer, 3) == 0;
@@ -55,7 +55,7 @@ void Server::run()
 
 			pollfd tmp;
 			tmp.fd = fdClient;
-			tmp.events = 0;
+			tmp.revents = 0;
 			tmp.events = POLLIN;
 			_pollFds.push_back(tmp);
 
