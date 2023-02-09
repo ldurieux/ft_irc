@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <limits>
-#include "ircserver.h"
+#include "includes/ircserver.h"
 
 void parseArgs(int& port, std::string& password, int argc, char **argv)
 {
