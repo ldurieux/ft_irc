@@ -5,6 +5,7 @@ SRCS		= \
 			  main.cpp \
 			  srcs/baseserver.cpp \
 			  srcs/ircserver.cpp \
+			  srcs/user.cpp \
 
 BOTSRCS		= \
 			  bot.cpp \

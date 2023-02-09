@@ -17,6 +17,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <fstream>
+#include <cctype>
 
 #include <vector>
 #include <poll.h>
