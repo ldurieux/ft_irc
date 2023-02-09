@@ -1,9 +1,13 @@
 NAME		= ircserv
+BOT			= bot
 
 SRCS		= \
 			  main.cpp \
 			  srcs/baseserver.cpp \
 			  srcs/ircserver.cpp \
+
+BOTSRCS		= \
+			  bot.cpp \
 
 HEADERS		= \
 			  includes
@@ -11,6 +15,8 @@ HEADERS		= \
 BUILDDIR	= .build
 OBJS		= $(SRCS:%.cpp=$(BUILDDIR)/%.o)
 DEPS		= $(SRCS:%.cpp=$(BUILDDIR)/%.d)
+BOTOBJS		= $(BOTSRCS:%.cpp=$(BUILDDIR)/%.o)
+BOTDEPS		= $(BOTSRCS:%.cpp=$(BUILDDIR)/%.d)
 CXX			= c++ -std=c++98
 CXXWFLGS	= -Wall -Wextra -Werror -g3 #-fsanitize=address
 DEPSFLAGS	= -MMD -MP
@@ -18,10 +24,13 @@ RM			= rm -Rf
 MAKE		= make -C
 MKDIR		= mkdir
 
-all : $(NAME)
+all : $(NAME) $(BOT)
 
 $(NAME) : $(OBJS)
 		$(CXX) $(CXXWFLGS) -o $(NAME) $(OBJS)
+
+$(BOT) : $(BOTOBJS)
+		$(CXX) $(CXXWFLGS) -o $(BOT) $(BOTOBJS)
 
 bonus : $(NAME)
 
