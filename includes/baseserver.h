@@ -31,19 +31,32 @@ public:
 
 	const std::string& password() const { return _password; }
 
+private:
+	void incomingConnection();
+	void incomingData(std::size_t i);
+
+	std::size_t getPosFromId(std::size_t id);
+	void sendData(int fd, const std::string& data);
+
 protected:
-	virtual void onNewConnection(std::size_t id);
-	virtual void onNewData(std::size_t id, const std::string& data);
-	virtual void onClientDisconnect(std::size_t id);
+	virtual void onNewConnection(std::size_t id) = 0;
+	virtual void onNewData(std::size_t id, const std::string& data) = 0;
+	virtual void onClientDisconnect(std::size_t id) = 0;
 
 	void disconnectClient(std::size_t id);
+
+	void sendTo(std::size_t id, const std::string& data);
+	void broadcast(const std::string& data);
+	void broadcastFrom(std::size_t id, const std::string& data);
 
 private:
 	std::string _password;
 
 	sockaddr_in _socketServer;
 	int			_fdServer;
-	std::vector<pollfd> _pollFds;
+
+	std::vector<pollfd>			_pollFds;
+	std::vector<std::string>	_clientBuf;
 };
 
 #endif // BASESERVER_H
