@@ -8,6 +8,8 @@ SRCS		= \
 
 BOTSRCS		= \
 			  bot.cpp \
+			  srcs/baseclient.cpp \
+			  srcs/ircclient.cpp \
 
 HEADERS		= \
 			  includes
@@ -38,7 +40,7 @@ clean :
 		-$(RM) $(BUILDDIR)
 
 fclean : clean
-		-$(RM) $(NAME)
+		-$(RM) $(NAME) $(BOT)
 
 re : fclean
 		$(MAKE) ./ all
