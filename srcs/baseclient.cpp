@@ -82,7 +82,7 @@ bool BaseClient::incomingData()
 	{
 		if (*it == '\n')
 		{
-			onNewData(std::string(start, it));
+			onNewData(std::string(start, it - 1));
 			start = it + 1;
 		}
 	}
