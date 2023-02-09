@@ -15,6 +15,7 @@ class Chanel {
 public:
 	Chanel(std::string name, User *creator);
 	~Chanel();
+	const std::string getName ();
 	bool	addUser(User *user);
 	bool	promoteUser(User *op, User *target);
 	bool	demoteUser(User *op, User *target);

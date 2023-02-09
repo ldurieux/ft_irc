@@ -10,6 +10,11 @@ Chanel::Chanel(std::string name, User *creator) :
 
 Chanel::~Chanel() {}
 
+const std::string Chanel::getName()
+{
+	return _name;
+}
+
 bool	Chanel::addUser(User *user)
 {
 	std::list<std::string>::iterator findIter = std::find(_banList.begin(), _banList.end(), user->getUsername());

@@ -3,9 +3,18 @@
 #include <cstddef>
 #include <string>
 
-User::User(std::size_t id) : _id(id) {}
+User::User(std::size_t id) : 
+	_id(id),
+	_nickname(),
+	_username()
+{}
 
 User::~User() {}
+
+const std::size_t		User::getId()
+{
+	return _id;
+}
 
 void    User::setNickname(std::string nickname)
 {

@@ -1,8 +1,12 @@
 #include "../includes/ircserver.h"
 #include "../includes/user.h"
+#include <list>
+#include <cstddef>
+#include <string>
 
 void IrcServer::onNewConnection(std::size_t id)
 {
+	_userList.push_back(User(id));
 	std::cout << '[' << id << "]new client !" << std::endl;
 }
 
@@ -10,8 +14,7 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 {
 	//std::cout << '[' << id << "]received: \'" << data << '\'' << std::endl;
 	//Prendre les 4 premieres lettre de DATA
-	User *user;
-	user = new User();
+	User user(id);
 	std::string type_of_request;
 	std::string content;
 	int i;
@@ -79,11 +82,56 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 		default:
 			std::cout << " [" << id << "]UNKNOWN DETECTED " << "\n";
 	} */
-	user->printInfo();
+	user.printInfo();
 	std::cout << "\n";
 }
 
 void IrcServer::onClientDisconnect(std::size_t id)
 {
 	std::cout << '[' << id << "]disconnected" << std::endl;
+}
+
+
+std::list<Chanel>::iterator	IrcServer::findChannel(const std::string &name)
+{
+	std::list<Chanel>::iterator it = _channelList.begin();
+	for(; it != _channelList.end(); it++)
+	{
+		if (it->getName() == name)
+			return it;
+	}
+	return _channelList.end();
+}
+
+
+std::list<User>::iterator	IrcServer::findUser(const std::size_t id)
+{
+	std::list<User>::iterator it = _userList.begin();
+	for(; it != _userList.end(); it++)
+	{
+		if (it->getId() == id)
+			return it;
+	}
+	return _userList.end();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///                       COMMAND                                            ///
+////////////////////////////////////////////////////////////////////////////////
+
+bool	IrcServer::joinChannel(User *user, const std::string &channel)
+{
+	std::list<Chanel>::iterator it = findChannel(channel);
+	if (it == _channelList.end())
+	{
+		_channelList.push_back(Chanel(channel, user));
+		return true;
+	}
+	if (it->addUser(user) == true)
+	{
+		std::list<User>::iterator it_user = findUser(user->getId());
+		it_user->joinChanel(channel);
+		return true;
+	}
+	return false;
 }

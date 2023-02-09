@@ -12,6 +12,7 @@ class User {
 public:
 	User(std::size_t id);
 	~User();
+	const std::size_t			getId();
     void				setNickname(std::string nickname);
 	const std::string	getUsername();
     void				setUsername(std::string username);
