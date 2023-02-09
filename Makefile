@@ -6,6 +6,7 @@ SRCS		= \
 			  srcs/baseserver.cpp \
 			  srcs/ircserver.cpp \
 			  srcs/user.cpp \
+			  srcs/chanel.cpp
 
 BOTSRCS		= \
 			  bot.cpp \
