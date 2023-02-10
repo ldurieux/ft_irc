@@ -122,7 +122,9 @@ std::size_t BaseServer::getPosFromId(std::size_t id)
 
 void BaseServer::sendData(int fd, const std::string& data)
 {
-	if (send(fd, data.data(), data.size(), 0) == -1)
+	std::string cpy = data + "\n";
+
+	if (send(fd, cpy.data(), cpy.size(), 0) == -1)
 		std::cout << __FUNCTION__ << " [" << fd << "] " << errno << std::endl;
 }
 

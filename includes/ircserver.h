@@ -15,6 +15,7 @@ public:
 
 	std::list<Chanel>::iterator	findChannel(const std::string &name);
 	std::list<User>::iterator	findUser(const std::size_t id);
+	std::list<User>::iterator	findUser(const std::string& name);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///                       COMMAND                                            ///
@@ -27,11 +28,15 @@ protected:
 	virtual void onClientDisconnect(std::size_t id);
 
 private:
-	void onJoinChannel(User* from, const std::string& content);
+	void onJoinChannel(User* user, const std::string& content);
 	void onNick(User* user, const std::string& content);
 	void onPass(User* user, const std::string& content);
 	void onUser(User* user, const std::string& content);
 	void onQuit(User* user, const std::string& content);
+	void onPrivmsg(User* user, const std::string& content);
+	void onNotice(User* user, const std::string& content);
+
+	std::string getMsgPrefix(User* user) const;
 
 	std::list<User> _userList;
 	std::list<Chanel> _channelList;
