@@ -300,6 +300,23 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 	std::list<Chanel>::iterator chanIt = findChannel(dest);
 	if (chanIt != _channelList.end())
 	{
+		if (chanIt->isBanned(user->getUsername()))
+			return;
+		std::vector<User*> users = chanIt->getUsers();
+		std::vector<User*>::iterator it = users.begin();
+		for (; it != users.end(); it++)
+		{
+			User* tmp = *it;
+			if (tmp == user)
+				continue;
+			if (!tmp)
+			{
+				std::cout << "someone fucked up! " << __FUNCTION__ << std::endl;
+
+				continue;
+			}
+			sendTo(tmp->getId(), getMsgPrefix(user) + " PRIVMSG " + dest + " :" + message);
+		}
 		return;
 	}
 

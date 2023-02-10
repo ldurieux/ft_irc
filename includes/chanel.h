@@ -15,13 +15,19 @@ class Chanel {
 public:
 	Chanel(const std::string& name, User *creator);
 	~Chanel();
+
 	const std::string getName ();
 	bool	addUser(User *user);
 	bool	promoteUser(User *op, User *target);
 	bool	demoteUser(User *op, User *target);
+
+	bool	isBanned(const std::string& username);
+
+	std::vector<User*> getUsers() const;
+
 private:
 	std::string				_name;
-	std::list<std::string>		_banList;
+	std::list<std::string>	_banList;
 	std::map<User*, bool>	_userOfChanel;
 };
 

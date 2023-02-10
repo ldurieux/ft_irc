@@ -49,3 +49,24 @@ bool	Chanel::demoteUser(User *op, User *target)
 	return false;
 }
 
+bool Chanel::isBanned(const std::string& username)
+{
+	std::list<std::string>::iterator it;
+	for (it = _banList.begin(); it != _banList.end(); ++it)
+	{
+		if (*it == username)
+			return true;
+	}
+	return false;
+}
+
+std::vector<User*> Chanel::getUsers() const
+{
+	std::vector<User*> res;
+
+	std::map<User*, bool>::const_iterator it = _userOfChanel.begin();
+	for (; it != _userOfChanel.end(); it++)
+		res.push_back(it->first);
+	return res;
+}
+
