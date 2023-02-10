@@ -2,6 +2,7 @@
 #include "../includes/user.h"
 #include <list>
 #include <cstddef>
+#include <ostream>
 #include <string>
 
 void IrcServer::onNewConnection(std::size_t id)
@@ -57,7 +58,8 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 				n++;
 			}
 			first_arg.assign(content, 0, n); //first_arg = Channel
-			//joinChannel(|USER|, first_arg);
+			joinChannel(&*findUser(id), first_arg);
+			// std::cout << findUser(id)->getId() << "\n" << findChannel(first_arg)->getName() << std::endl ; // DEBUG LINE
 			//-------------DEBUG-----------------------
 			std::cout << first_arg << "\n";
 			//-----------------------------------------
@@ -313,6 +315,8 @@ std::list<User>::iterator	IrcServer::findUser(const std::size_t id)
 
 bool	IrcServer::joinChannel(User *user, const std::string &channel)
 {
+	if (channel[0] != '#' || channel.length() < 2)
+		return false;
 	std::list<Chanel>::iterator it = findChannel(channel);
 	if (it == _channelList.end())
 	{
