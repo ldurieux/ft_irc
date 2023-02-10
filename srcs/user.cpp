@@ -11,7 +11,7 @@ User::User(std::size_t id) :
 
 User::~User() {}
 
-const std::size_t		User::getId()
+std::size_t User::getId()
 {
 	return _id;
 }
@@ -26,7 +26,7 @@ void    User::setUsername(std::string username)
     _username = username;
 }
 
-const std::string User::getUsername()
+const std::string& User::getUsername()
 {
 	return _username;
 }

@@ -273,7 +273,6 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 			std::cout << third_arg << "\n";
 			//-----------------------------------------
 			break ;
-		default:
 	}
 	user.printInfo();
 	std::cout << "\n";
