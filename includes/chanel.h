@@ -13,7 +13,7 @@ class User;
 
 class Chanel {
 public:
-	Chanel(std::string name, User *creator);
+	Chanel(const std::string& name, User *creator);
 	~Chanel();
 	const std::string getName ();
 	bool	addUser(User *user);

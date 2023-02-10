@@ -6,7 +6,8 @@
 User::User(std::size_t id) : 
 	_id(id),
 	_nickname(),
-	_username()
+	_username(),
+	_authenticated(false)
 {}
 
 User::~User() {}
@@ -39,4 +40,23 @@ void    User::printInfo() const
 void	User::joinChanel(std::string nameChanel)
 {
 	_chanelOfUser.push_back(nameChanel);
+}
+
+std::string User::getNickname() const
+{
+	return _nickname;
+}
+
+bool User::authenticated() const
+{
+	if (_username.size() <= 0)
+		return false;
+	if (_nickname.size() <= 0)
+		return false;
+	return _authenticated;
+}
+
+void User::setAuthenticated(bool newAuthenticated)
+{
+	_authenticated = newAuthenticated;
 }

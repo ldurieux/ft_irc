@@ -13,9 +13,14 @@ void IrcServer::onNewConnection(std::size_t id)
 
 void IrcServer::onNewData(std::size_t id, const std::string& data)
 {
-	//std::cout << '[' << id << "]received: \'" << data << '\'' << std::endl;
-	//Prendre les 4 premieres lettre de DATA
-	User user(id);
+	std::list<User>::iterator it = findUser(id);
+	if (it == _userList.end())
+	{
+		std::cout << "Couldn't find the user id " << id << " " << __FUNCTION__ << std::endl;
+		return;
+	}
+	User* user = &*it;
+
 	std::string type_of_request;
 	std::string content;
 	std::string first_arg;
@@ -43,103 +48,11 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	n = 0;
 	switch (i)
 	{
-		case 0: //Commande JOIN
-			std::cout << " [" << id << "]JOIN DETECTED " << "\n";
-			while (n < (int)content.length() && isspace(content.at(n)))
-			{
-				n++;
-			}
-			content.erase(0, n);
-			n = 0;
-			while (n < (int)content.length())
-			{
-				if (isspace(content.at(n)))
-					break ;
-				n++;
-			}
-			first_arg.assign(content, 0, n); //first_arg = Channel
-			joinChannel(&*findUser(id), first_arg);
-			// std::cout << findUser(id)->getId() << "\n" << findChannel(first_arg)->getName() << std::endl ; // DEBUG LINE
-			//-------------DEBUG-----------------------
-			std::cout << first_arg << "\n";
-			//-----------------------------------------
-			break ;
-		case 1:
-			std::cout << " [" << id << "]NICK DETECTED " << "\n"; //Commande NICK
-			while (n < (int)content.length() && isspace(content.at(n)))
-			{
-				n++;
-			}
-			content.erase(0, n);
-			n = 0;
-			while (n < (int)content.length())
-			{
-				if (isspace(content.at(n)))
-					break ;
-				n++;
-			}
-			first_arg.assign(content, 0, n); //first_arg = Le nickname
-			//ICI il faut changer le nickname du user dans la class
-			//-------------DEBUG-----------------------
-			std::cout << first_arg << "\n";
-			//-----------------------------------------
-			break ;
-		case 2:
-			std::cout << " [" << id << "]PASS DETECTED " << "\n"; //Commande PASS
-			while (n < (int)content.length() && isspace(content.at(n)))
-			{
-				n++;
-			}
-			content.erase(0, n);
-			n = 0;
-			while (n < (int)content.length())
-			{
-				if (isspace(content.at(n)))
-					break ;
-				n++;
-			}
-			first_arg.assign(content, 0, n); //first_arg = Mot_de_Passe
-			//-------------DEBUG-----------------------
-			std::cout << first_arg << "\n";
-			//-----------------------------------------
-			//ICI il faut changer le Motdepasse du user dans la class
-			break ;
-		case 3:
-			std::cout << " [" << id << "]USER DETECTED " << "\n"; //Commande USER
-			while (n < (int)content.length() && isspace(content.at(n)))
-			{
-				n++;
-			}
-			content.erase(0, n);
-			n = 0;
-			while (n < (int)content.length())
-			{
-				if (isspace(content.at(n)))
-					break ;
-				n++;
-			}
-			first_arg.assign(content, 0, n); //first_arg = Username
-			//ICI il faut definir le username dans la class
-			//-------------DEBUG-----------------------
-			std::cout << first_arg << "\n";
-			//-----------------------------------------
-			break ;
-		case 4:
-			std::cout << " [" << id << "]QUIT DETECTED " << "\n"; //Commande QUIT
-			while (n < (int)content.length() && isspace(content.at(n)))
-			{
-				n++;
-			}
-			content.erase(0, n);
-			n = 0;
-			while (n < (int)content.length())
-				n++;
-			first_arg.assign(content, 0, n); //first_arg = MSG de depart
-			//ICI il faut faire quitter le USER tout en affichant son message de depart
-			//-------------DEBUG-----------------------
-			std::cout << first_arg << "\n";
-			//-----------------------------------------
-			break ;
+	case 0: onJoinChannel(user, content); break ;
+	case 1: onNick(user, content); break;
+	case 2: onPass(user, content); break;
+	case 3: onUser(user, content); break;
+	case 4: onQuit(user, content); break;
 		case 5:
 		{
 			int nbr_channel = 0;
@@ -276,13 +189,114 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 			//-----------------------------------------
 			break ;
 	}
-	user.printInfo();
+	user->printInfo();
 	std::cout << "\n";
 }
 
 void IrcServer::onClientDisconnect(std::size_t id)
 {
 	std::cout << '[' << id << "]disconnected" << std::endl;
+}
+
+void IrcServer::onJoinChannel(User* from, const std::string& content)
+{
+	int n = 0;
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+		start++;
+	n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+
+	std::string channelName(content, start, n - start);
+	joinChannel(from, channelName);
+}
+
+void IrcServer::onNick(User* from, const std::string& content)
+{
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+	{
+		start++;
+	}
+	int n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+	std::string nickname(content, start, n - start);
+	from->setNickname(nickname);
+}
+
+void IrcServer::onPass(User* user, const std::string& content)
+{
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+	{
+		start++;
+	}
+	int n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+	std::string pass(content, start, n - start);
+	if (password() == pass)
+		user->setAuthenticated(true);
+	else
+	{
+		std::cout << "Invalid password" << std::endl;
+	}
+}
+
+void IrcServer::onUser(User* user, const std::string& content)
+{
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+	{
+		start++;
+	}
+	int n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+	std::string username(content, start, n - start);
+	user->setUsername(username);
+}
+
+void IrcServer::onQuit(User* user, const std::string& content)
+{
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+	{
+		start++;
+	}
+	int n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+	std::string msg(content, start, n - start);
+	(void)user;
+	std::cout << "TODO send exit message: " << msg << std::endl;
 }
 
 
@@ -316,7 +330,10 @@ std::list<User>::iterator	IrcServer::findUser(const std::size_t id)
 bool	IrcServer::joinChannel(User *user, const std::string &channel)
 {
 	if (channel[0] != '#' || channel.length() < 2)
+	{
+		std::cout << channel << " isn't a valid name" << std::endl;
 		return false;
+	}
 	std::list<Chanel>::iterator it = findChannel(channel);
 	if (it == _channelList.end())
 	{

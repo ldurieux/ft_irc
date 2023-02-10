@@ -2,9 +2,10 @@
 #include "../includes/chanel.h"
 #include <string>
 
-Chanel::Chanel(std::string name, User *creator) :
+Chanel::Chanel(const std::string& name, User *creator) :
 	_name(name)
 {
+	std::cout << "Channel " << name << " created by " << creator->getUsername() << "." << std::endl;
 	_userOfChanel[creator] = OP;
 }
 

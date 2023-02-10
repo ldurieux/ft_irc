@@ -27,6 +27,12 @@ protected:
 	virtual void onClientDisconnect(std::size_t id);
 
 private:
+	void onJoinChannel(User* from, const std::string& content);
+	void onNick(User* user, const std::string& content);
+	void onPass(User* user, const std::string& content);
+	void onUser(User* user, const std::string& content);
+	void onQuit(User* user, const std::string& content);
+
 	std::list<User> _userList;
 	std::list<Chanel> _channelList;
 };
