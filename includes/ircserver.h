@@ -33,6 +33,7 @@ private:
 	void onPass(User* user, const std::string& content);
 	void onUser(User* user, const std::string& content);
 	void onQuit(User* user, const std::string& content);
+	void onPart(User* user, const std::string& content);
 	void onPrivmsg(User* user, const std::string& content);
 	void onNotice(User* user, const std::string& content);
 

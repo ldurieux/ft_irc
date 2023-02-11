@@ -48,84 +48,14 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	n = 0;
 	switch (i)
 	{
-	case 0: onJoinChannel(user, content); break ;
+	case 0: onJoinChannel(user, content); break;
 	case 1: onNick(user, content); break;
 	case 2: onPass(user, content); break;
 	case 3: onUser(user, content); break;
 	case 4: onQuit(user, content); break;
-	case 5:
-	{
-		int nbr_channel = 0;
-		std::cout << " [" << id << "]PART DETECTED " << "\n"; //Commande PART (leave)
-		while (n < (int)content.length() && isspace(content.at(n)))
-		{
-			n++;
-		}
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-		{
-			if (content.at(n) == ',' && content.at(n - 1) != ',')
-				nbr_channel++;
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		first_arg.assign(content, 0, n); //first_arg = Nom des channels quitters
-		std::string channels[nbr_channel];
-		n = 0;
-		int ch = 0;
-		while (n < (int)content.length())
-		{
-			if (content.at(n) == ',' && content.at(n - 1) != ',')
-			{
-				channels[ch].assign(content, 0, n);
-				ch++;
-				content.erase(0, n);
-				n = -1;
-			}
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		//ICI il faut enlever les channel au USER
-		//-------------DEBUG-----------------------
-		std::cout << first_arg << "\n";
-		int nbr = 0;
-		while (nbr < nbr_channel)
-		{
-			std::cout << channels[nbr] << "\n";
-		}
-		//-----------------------------------------
-		break ;
-	}
+	case 5: onPart(user, content); break;
 	case 6: onPrivmsg(user, content); break;
-	case 7:
-		std::cout << " [" << id << "]NOTICE DETECTED " << "\n"; //Commande NOTICE
-		while (n < (int)content.length() && isspace(content.at(n)))
-		{
-			n++;
-		}
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-		{
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		first_arg.assign(content, 0, n); //first_arg = Channel ou USER a qui on envoye la notice
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-			n++;
-		second_arg.assign(content, 0, n); //second_arg = Le message a notifier (Mettre en couleur)
-		//ICI envoyer le msg en couleur au channel ou user selectionner
-		//-------------DEBUG-----------------------
-		std::cout << first_arg << "\n";
-		std::cout << second_arg << "\n";
-		//-----------------------------------------
-		break ;
+	case 7: onNotice(user, content); break;
 	case 8:
 		std::cout << " [" << id << "]MODE DETECTED " << "\n"; //Commande MODE
 		while (n < (int)content.length() && isspace(content.at(n)))
@@ -176,12 +106,11 @@ void IrcServer::onClientDisconnect(std::size_t id)
 
 void IrcServer::onJoinChannel(User* user, const std::string& content)
 {
-	int n = 0;
 	int start = 0;
 
 	while (start < (int)content.length() && isspace(content.at(start)))
 		start++;
-	n = start;
+	int n = start;
 	while (n < (int)content.length())
 	{
 		if (isspace(content.at(n)))
@@ -274,8 +203,57 @@ void IrcServer::onQuit(User* user, const std::string& content)
 		n++;
 	}
 	std::string msg(content, start, n - start);
+
+
 	(void)user;
 	std::cout << "TODO send exit message: " << msg << std::endl;
+}
+
+void IrcServer::onPart(User* user, const std::string& content)
+{
+	std::string::const_iterator it = content.begin();
+	std::vector<std::string> channels;
+	std::string message;
+
+	while (isspace(*it) && it != content.end())
+		it++;
+	if (it == content.end())
+		return;
+
+	std::string::const_iterator it2 = it;
+	for (; it2 != content.end(); it2++)
+	{
+		if (*it2 == ',' || std::isspace(*it2))
+		{
+			if (it2 - it < 2)
+				return;
+			channels.push_back(std::string(it, it2));
+			it = it2 + 1;
+			if (std::isspace(*it2))
+				break;
+		}
+	}
+	if (it2 == content.end())
+		return;
+	it = it2;
+	while (*it != ':' && it != content.end())
+		it++;
+	if (it == content.end())
+		return;
+
+	message = std::string(it, content.end());
+	if (message.size() < 1)
+		return;
+	for (std::size_t i = 0; i < channels.size(); i++)
+	{
+		std::list<Chanel>::iterator chanIt = findChannel(channels[i]);
+		if (chanIt == _channelList.end())
+			continue;
+		std::vector<User*> users = chanIt->getUsers();
+		std::vector<User*>::iterator it = users.begin();
+		for (; it != users.end(); it++)
+			sendTo((*it)->getId(), getMsgPrefix(user) + " PART " + channels[i] + " :" + message);
+	}
 }
 
 void IrcServer::onPrivmsg(User* user, const std::string& content)
@@ -309,12 +287,6 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 			User* tmp = *it;
 			if (tmp == user)
 				continue;
-			if (!tmp)
-			{
-				std::cout << "someone fucked up! " << __FUNCTION__ << std::endl;
-
-				continue;
-			}
 			sendTo(tmp->getId(), getMsgPrefix(user) + " PRIVMSG " + dest + " :" + message);
 		}
 		return;
@@ -332,8 +304,48 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 
 void IrcServer::onNotice(User* user, const std::string& content)
 {
-	(void)user;
-	(void)content;
+	int start = 0;
+
+	while (start < (int)content.length() && isspace(content.at(start)))
+	{
+		start++;
+	}
+	int n = start;
+	while (n < (int)content.length())
+	{
+		if (isspace(content.at(n)))
+			break ;
+		n++;
+	}
+
+	std::string dest(content, start, n - start);
+	std::string message(content, n + 2, std::string::npos);
+
+	std::list<Chanel>::iterator chanIt = findChannel(dest);
+	if (chanIt != _channelList.end())
+	{
+		if (chanIt->isBanned(user->getUsername()))
+			return;
+		std::vector<User*> users = chanIt->getUsers();
+		std::vector<User*>::iterator it = users.begin();
+		for (; it != users.end(); it++)
+		{
+			User* tmp = *it;
+			if (tmp == user)
+				continue;
+			sendTo(tmp->getId(), getMsgPrefix(user) + " NOTICE " + dest + " :" + message);
+		}
+		return;
+	}
+
+	std::list<User>::iterator userIt = findUser(dest);
+	if (userIt != _userList.end())
+	{
+		User userDest = *userIt;
+		sendTo(userDest.getId(), getMsgPrefix(user) + " NOTICE " + dest + " :" + message);
+		return ;
+	}
+	std::cout << "user or channel not found: " << dest << std::endl;
 }
 
 std::string IrcServer::getMsgPrefix(User* user) const
