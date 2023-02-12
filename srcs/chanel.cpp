@@ -25,6 +25,19 @@ bool	Chanel::addUser(User *user)
 	return true;
 }
 
+void Chanel::removeUser(User* user)
+{
+	std::map<User*, bool>::iterator it = _userOfChanel.begin();
+	for(; it != _userOfChanel.end(); it++)
+	{
+		if (it->first == user)
+		{
+			_userOfChanel.erase(it);
+			return;
+		}
+	}
+}
+
 bool	Chanel::promoteUser(User *op, User *target)
 {
 	if (_userOfChanel[op] == OP 

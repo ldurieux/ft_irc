@@ -18,6 +18,7 @@ public:
 
 	const std::string getName ();
 	bool	addUser(User *user);
+	void	removeUser(User *user);
 	bool	promoteUser(User *op, User *target);
 	bool	demoteUser(User *op, User *target);
 

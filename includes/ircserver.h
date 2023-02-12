@@ -36,6 +36,9 @@ private:
 	void onPart(User* user, const std::string& content);
 	void onPrivmsg(User* user, const std::string& content);
 	void onNotice(User* user, const std::string& content);
+	void onMode(User* user, const std::string& content);
+
+	void onDisconnect(std::size_t id);
 
 	std::string getMsgPrefix(User* user) const;
 

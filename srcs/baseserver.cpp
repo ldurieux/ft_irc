@@ -139,6 +139,7 @@ void BaseServer::disconnectClient(std::size_t id)
 		std::cout << __FUNCTION__ << ' ' << e.what() << " [" << id << ']' << std::endl;
 		return;
 	}
+	close(_pollFds[i].fd);
 	_pollFds.erase(_pollFds.begin() + i);
 	_clientBuf.erase(_clientBuf.begin() + i - 1);
 	std::cout << '[' << id << "]closed" << std::endl;

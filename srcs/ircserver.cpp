@@ -21,35 +21,25 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	}
 	User* user = &*it;
 
-	std::string type_of_request;
-	std::string first_arg;
-	std::string second_arg;
-	std::string third_arg;
 	std::size_t i;
-	int n;
 	for (i = 0; i < data.length(); i++)
-	{
 		if (data.at(i) < 65 || data.at(i) > 90)
 			break ;
-	}
-	type_of_request.assign(data, 0, i);
+	std::string requestType(data, 0, i);
 
 	while (std::isspace(data[i]) && i < data.size())
 		i++;
-	if (i >= data.size())
-		return;
 	std::string content(data.begin() + i, data.end());
 
-	std::cout << '[' << id << "]request: \'" << type_of_request
+	std::cout << '[' << id << "]request: \'" << requestType
 			  << "\' content: \'" << content << '\'' << std::endl;
 
 	std::string instruction[9] = {"JOIN", "NICK", "PASS", "USER", "QUIT", "PART", "PRIVMSG", "NOTICE", "MODE"};
 	for (i = 0; i < 9; i++)
 	{
-		if (type_of_request == instruction[i])
+		if (requestType == instruction[i])
 			break ;
 	}
-	n = 0;
 	switch (i)
 	{
 	case 0: onJoinChannel(user, content); break;
@@ -60,54 +50,17 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	case 5: onPart(user, content); break;
 	case 6: onPrivmsg(user, content); break;
 	case 7: onNotice(user, content); break;
-	case 8:
-		std::cout << " [" << id << "]MODE DETECTED " << "\n"; //Commande MODE
-		while (n < (int)content.length() && isspace(content.at(n)))
-		{
-			n++;
-		}
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-		{
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		first_arg.assign(content, 0, n); //first_arg = Channel sur lequel on met un user moderator
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-		{
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		second_arg.assign(content, 0, n); //second_arg = Le type d'action MODE effectuer (+/-[lettres])
-		content.erase(0, n);
-		n = 0;
-		while (n < (int)content.length())
-		{
-			if (isspace(content.at(n)))
-				break ;
-			n++;
-		}
-		third_arg.assign(content, 0, n); //Le nom du USER que l'on met operator
-		//ICI Mettre le USER selectionner OPERATOR sur le bon CHANNEL
-		//-------------DEBUG-----------------------
-		std::cout << first_arg << "\n";
-		std::cout << second_arg << "\n";
-		std::cout << third_arg << "\n";
-		//-----------------------------------------
-		break ;
+	case 8: onMode(user, content); break;
 	default:
-		std::cout << '\'' << type_of_request << "\' not handled" << std::endl;
+		std::cout << '\'' << requestType << "\' not handled" << std::endl;
 	}
 }
 
 void IrcServer::onClientDisconnect(std::size_t id)
 {
 	std::cout << '[' << id << "]disconnected" << std::endl;
+
+	onDisconnect(id);
 }
 
 void IrcServer::onJoinChannel(User* user, const std::string& content)
@@ -151,6 +104,13 @@ void IrcServer::onUser(User* user, const std::string& content)
 	std::string username(content, 0, n);
 	user->setUsername(username);
 
+	if (!user->authenticated())
+	{
+		disconnectClient(user->getId());
+		onDisconnect(user->getId());
+		return;
+	}
+
 	sendTo(user->getId(), "PING :ft_irc");
 }
 
@@ -160,10 +120,10 @@ void IrcServer::onQuit(User* user, const std::string& content)
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
 	std::string msg(content, 0, n);
+	(void)msg;
 
-
-	(void)user;
-	std::cout << "TODO send exit message: " << msg << std::endl;
+	disconnectClient(user->getId());
+	onDisconnect(user->getId());
 }
 
 void IrcServer::onPart(User* user, const std::string& content)
@@ -281,6 +241,59 @@ void IrcServer::onNotice(User* user, const std::string& content)
 		return ;
 	}
 	std::cout << "user or channel not found: " << dest << std::endl;
+}
+
+void IrcServer::onMode(User* user, const std::string& content)
+{
+	std::size_t start;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
+		n++;
+	if (n >= content.length())
+		return;
+	std::string channel(content, 0, n);
+
+	start = ++n;
+	while (n < content.length() && !std::isspace(content[n]))
+		n++;
+	std::string action(content, start, n - start);
+
+	start = ++n;
+	while (n < content.length() && !std::isspace(content[n]))
+		n++;
+	std::string userStr(content, start, n - start);
+
+	(void)user;
+	//-------------DEBUG-----------------------
+	std::cout << "MODE:" << std::endl;
+	std::cout << "channel: " << channel << '\'' << std::endl;
+	std::cout << "action: " << action << '\'' << std::endl;
+	std::cout << "user: " << userStr << '\'' << std::endl;
+	//-----------------------------------------
+}
+
+void IrcServer::onDisconnect(std::size_t id)
+{
+	std::list<User>::iterator it = findUser(id);
+	if (it == _userList.end())
+	{
+		std::cout << "Couldn't find the user id " << id << " " << __FUNCTION__ << std::endl;
+		return;
+	}
+	User* user = &*it;
+
+	std::list<Chanel>::iterator chanIt = _channelList.begin();
+	for (; chanIt != _channelList.end(); chanIt++)
+		chanIt->removeUser(user);
+	std::list<User>::iterator userIt = _userList.begin();
+	for (; userIt != _userList.end(); userIt++)
+	{
+		if (userIt->getId() == user->getId())
+		{
+			_userList.erase(userIt);
+			break;
+		}
+	}
 }
 
 std::string IrcServer::getMsgPrefix(User* user) const
