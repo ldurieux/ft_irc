@@ -37,6 +37,7 @@ private:
 	void onPrivmsg(User* user, const std::string& content);
 	void onNotice(User* user, const std::string& content);
 	void onMode(User* user, const std::string& content);
+	void onKick(User* user, const std::string& content);
 
 	void onDisconnect(std::size_t id);
 

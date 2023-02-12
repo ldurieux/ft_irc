@@ -23,6 +23,8 @@ public:
 	bool	demoteUser(User *op, User *target);
 
 	bool	isBanned(const std::string& username);
+	bool	isOp(User* user);
+	bool	isInChannel(User* user);
 
 	std::vector<User*> getUsers() const;
 

@@ -1,6 +1,7 @@
 #include "../includes/user.h"
 #include "../includes/chanel.h"
 #include <string>
+#include <vector>
 
 Chanel::Chanel(const std::string& name, User *creator) :
 	_name(name)
@@ -70,6 +71,23 @@ bool Chanel::isBanned(const std::string& username)
 		if (*it == username)
 			return true;
 	}
+	return false;
+}
+
+bool	Chanel::isOp(User* user)
+{
+	if (_userOfChanel[user] == OP)
+		return true;
+	return false;
+}
+
+bool	Chanel::isInChannel(User* user)
+{
+	std::vector<User*> listUser = getUsers();
+	std::vector<User*>::iterator it = listUser.begin();
+	for(;it != listUser.end(); ++it)
+		if (*it == user)
+			return true;
 	return false;
 }
 
