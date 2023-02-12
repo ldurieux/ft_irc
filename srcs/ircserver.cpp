@@ -80,6 +80,25 @@ void IrcServer::onJoinChannel(User* user, const std::string& content)
 		return;
 
 	sendTo(user->getId(), getMsgPrefix(user) + " JOIN :" + channelName);
+
+	std::list<Chanel>::iterator chanIt = findChannel(channelName);
+	if (chanIt == _channelList.end())
+		return;
+	if (chanIt->isInChannel(user) == false)
+		return;
+	if (chanIt != _channelList.end())
+	{
+		std::vector<User*> users = chanIt->getUsers();
+		std::vector<User*>::iterator it = users.begin();
+		for (; it != users.end(); it++)
+		{
+			User* tmp = *it;
+			if (tmp == user)
+				continue;
+			sendTo(tmp->getId(), getMsgPrefix(user) + " JOIN :" + channelName);
+		}
+		return;
+	}
 }
 
 void IrcServer::onNick(User* from, const std::string& content)
@@ -304,24 +323,27 @@ void IrcServer::onKick(User* user, const std::string& content)
 		n++;
 	if (n >= content.length())
 		return;
-	std::string nickname(content, 0, n);
+	std::string channel(content, 0, n);
 
 	start = ++n;
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	std::string channel(content, start, n - start);
+	std::string nickname(content, start, n - start);
 
 	if (content[n])
 		start = ++n;
 	std::string	message(content, start);
 	std::list<Chanel>::iterator chanIt = findChannel(channel);
+	if (chanIt == _channelList.end())
+	{
+		std::cout << "Channel not found " << channel << std::endl;
+		return;
+	}
 	if (chanIt->isOp(user) == false || chanIt->isInChannel(&*findUser(nickname)) == false 
 			|| &*findUser(nickname) == user)
 		return ;
 	if (chanIt != _channelList.end())
 	{
-		if (chanIt->isBanned(user->getUsername()))
-			return;
 		std::vector<User*> users = chanIt->getUsers();
 		std::vector<User*>::iterator it = users.begin();
 		for (; it != users.end(); it++)

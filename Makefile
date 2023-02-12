@@ -22,7 +22,7 @@ DEPS		= $(SRCS:%.cpp=$(BUILDDIR)/%.d)
 BOTOBJS		= $(BOTSRCS:%.cpp=$(BUILDDIR)/%.o)
 BOTDEPS		= $(BOTSRCS:%.cpp=$(BUILDDIR)/%.d)
 CXX			= c++ -std=c++98
-CXXWFLGS	= -Wall -Wextra -Werror -g3 -fsanitize=address
+CXXWFLGS	= -Wall -Wextra -Werror -g3 #-fsanitize=address
 DEPSFLAGS	= -MMD -MP
 RM			= rm -Rf
 MAKE		= make -C
