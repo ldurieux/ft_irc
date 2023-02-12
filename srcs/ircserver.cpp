@@ -64,12 +64,18 @@ void IrcServer::onClientDisconnect(std::size_t id)
 	onDisconnect(id);
 }
 
-void IrcServer::onJoinChannel(User* user, const std::string& content)
+std::string	grab_first_arg(const std::string& content)
 {
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	std::string channelName(content, 0, n);
+	std::string first_arg(content, 0, n);
+	return (first_arg);
+}
+
+void IrcServer::onJoinChannel(User* user, const std::string& content)
+{
+	std::string channelName = grab_first_arg(content);
 	if (!joinChannel(user, channelName))
 		return;
 
@@ -78,19 +84,13 @@ void IrcServer::onJoinChannel(User* user, const std::string& content)
 
 void IrcServer::onNick(User* from, const std::string& content)
 {
-	std::size_t n = 0;
-	while (n < content.length() && !std::isspace(content[n]))
-		n++;
-	std::string nickname(content, 0, n);
+	std::string nickname = grab_first_arg(content);
 	from->setNickname(nickname);
 }
 
 void IrcServer::onPass(User* user, const std::string& content)
 {
-	std::size_t n = 0;
-	while (n < content.length() && !std::isspace(content[n]))
-		n++;
-	std::string pass(content, 0, n);
+	std::string pass = grab_first_arg(content);
 	if (password() == pass)
 		user->setAuthenticated(true);
 	else
@@ -99,10 +99,7 @@ void IrcServer::onPass(User* user, const std::string& content)
 
 void IrcServer::onUser(User* user, const std::string& content)
 {
-	std::size_t n = 0;
-	while (n < content.length() && !std::isspace(content[n]))
-		n++;
-	std::string username(content, 0, n);
+	std::string username = grab_first_arg(content);
 	user->setUsername(username);
 
 	if (!user->authenticated())
@@ -117,10 +114,7 @@ void IrcServer::onUser(User* user, const std::string& content)
 
 void IrcServer::onQuit(User* user, const std::string& content)
 {
-	std::size_t n = 0;
-	while (n < content.length() && !std::isspace(content[n]))
-		n++;
-	std::string msg(content, 0, n);
+	std::string msg = grab_first_arg(content);
 	(void)msg;
 
 	disconnectClient(user->getId());
