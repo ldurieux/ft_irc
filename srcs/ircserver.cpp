@@ -22,23 +22,27 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	User* user = &*it;
 
 	std::string type_of_request;
-	std::string content;
 	std::string first_arg;
 	std::string second_arg;
 	std::string third_arg;
-	int i;
+	std::size_t i;
 	int n;
-	for (i = 0; i < (int)data.length(); i++)
+	for (i = 0; i < data.length(); i++)
 	{
 		if (data.at(i) < 65 || data.at(i) > 90)
 			break ;
 	}
 	type_of_request.assign(data, 0, i);
-	content.append(data);
-	content.erase(0, i);
-	std::cout << '[' << id << "]received: \'" << data << '\'' << std::endl << std::endl;
-	std::cout << " [" << id << "]Type_of_request: " << type_of_request << "\n";
-	std::cout << " [" << id << "]Content: " << content << "\n";
+
+	while (std::isspace(data[i]) && i < data.size())
+		i++;
+	if (i >= data.size())
+		return;
+	std::string content(data.begin() + i, data.end());
+
+	std::cout << '[' << id << "]request: \'" << type_of_request
+			  << "\' content: \'" << content << '\'' << std::endl;
+
 	std::string instruction[9] = {"JOIN", "NICK", "PASS", "USER", "QUIT", "PART", "PRIVMSG", "NOTICE", "MODE"};
 	for (i = 0; i < 9; i++)
 	{
@@ -96,6 +100,8 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 		std::cout << third_arg << "\n";
 		//-----------------------------------------
 		break ;
+	default:
+		std::cout << '\'' << type_of_request << "\' not handled" << std::endl;
 	}
 }
 
@@ -106,19 +112,10 @@ void IrcServer::onClientDisconnect(std::size_t id)
 
 void IrcServer::onJoinChannel(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-		start++;
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-
-	std::string channelName(content, start, n - start);
+	std::string channelName(content, 0, n);
 	if (!joinChannel(user, channelName))
 		return;
 
@@ -127,61 +124,31 @@ void IrcServer::onJoinChannel(User* user, const std::string& content)
 
 void IrcServer::onNick(User* from, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-	std::string nickname(content, start, n - start);
+	std::string nickname(content, 0, n);
 	from->setNickname(nickname);
 }
 
 void IrcServer::onPass(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-	std::string pass(content, start, n - start);
+	std::string pass(content, 0, n);
 	if (password() == pass)
 		user->setAuthenticated(true);
 	else
-		std::cout << "Invalid password" << std::endl;
+		std::cout << "Invalid password: " << pass << std::endl;
 }
 
 void IrcServer::onUser(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-	std::string username(content, start, n - start);
+	std::string username(content, 0, n);
 	user->setUsername(username);
 
 	sendTo(user->getId(), "PING :ft_irc");
@@ -189,20 +156,10 @@ void IrcServer::onUser(User* user, const std::string& content)
 
 void IrcServer::onQuit(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-	std::string msg(content, start, n - start);
+	std::string msg(content, 0, n);
 
 
 	(void)user;
@@ -258,21 +215,10 @@ void IrcServer::onPart(User* user, const std::string& content)
 
 void IrcServer::onPrivmsg(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-
-	std::string dest(content, start, n - start);
+	std::string dest(content, 0, n);
 	std::string message(content, n + 2, std::string::npos);
 
 	std::list<Chanel>::iterator chanIt = findChannel(dest);
@@ -304,21 +250,10 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 
 void IrcServer::onNotice(User* user, const std::string& content)
 {
-	int start = 0;
-
-	while (start < (int)content.length() && isspace(content.at(start)))
-	{
-		start++;
-	}
-	int n = start;
-	while (n < (int)content.length())
-	{
-		if (isspace(content.at(n)))
-			break ;
+	std::size_t n = 0;
+	while (n < content.length() && !std::isspace(content[n]))
 		n++;
-	}
-
-	std::string dest(content, start, n - start);
+	std::string dest(content, 0, n);
 	std::string message(content, n + 2, std::string::npos);
 
 	std::list<Chanel>::iterator chanIt = findChannel(dest);

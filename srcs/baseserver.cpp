@@ -102,7 +102,10 @@ void BaseServer::incomingData(std::size_t i)
 	{
 		if (*it == '\n')
 		{
-			onNewData(_pollFds[i].fd, std::string(start, it));
+			if (*(it - 1) == '\r')
+				onNewData(_pollFds[i].fd, std::string(start, it - 1));
+			else
+				onNewData(_pollFds[i].fd, std::string(start, it));
 			start = it + 1;
 		}
 	}
