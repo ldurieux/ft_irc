@@ -280,7 +280,42 @@ void IrcServer::onMode(User* user, const std::string& content)
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
 	std::string userStr(content, start, n - start);
-
+	std::list<Chanel>::iterator chanIt = findChannel(channel);
+	if (chanIt == _channelList.end())
+	{
+		std::cout << "Channel not found " << channel << std::endl;
+		return;
+	}
+	std::list<User>::iterator userIt = findUser(userStr);
+	if (userIt == _userList.end())
+	{
+		std::cout << "User not found " << userStr << std::endl;
+		return;
+	}
+	int isPromote;
+	if (action == "+o")
+		isPromote = 1;
+	else if (action == "-o")
+		isPromote = 0;
+	else
+	{
+		std::cout << "Unknown mode " << userStr << std::endl;
+		return;
+	}
+	if (chanIt->isInChannel(&*userIt) == false)
+	{
+		std::cout << "User is not in channel " << userStr << std::endl;
+		return;
+	}
+	if (&*userIt == user)
+	{
+		std::cout << "User can't promote himself " << userStr << std::endl;
+		return;
+	}
+	if (isPromote == 1)
+		chanIt->promoteUser(user, &*userIt);
+	else
+		chanIt->demoteUser(user, &*userIt);
 	(void)user;
 	//-------------DEBUG-----------------------
 	std::cout << "MODE:" << std::endl;
