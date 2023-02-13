@@ -11,7 +11,7 @@ void IrcServer::onNewConnection(std::size_t id)
 	std::cout << '[' << id << "]new client !" << std::endl;
 }
 
-void IrcServer::onNewData(std::size_t id, const std::string& data)
+void IrcServer::onNewData(std::size_t id, const std::string &data)
 {
 	std::list<User>::iterator it = findUser(id);
 	if (it == _userList.end())
@@ -19,12 +19,12 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 		std::cout << "Couldn't find the user id " << id << " " << __FUNCTION__ << std::endl;
 		return;
 	}
-	User* user = &*it;
+	User *user = &*it;
 
 	std::size_t i;
 	for (i = 0; i < data.length(); i++)
 		if (data.at(i) < 65 || data.at(i) > 90)
-			break ;
+			break;
 	std::string requestType(data, 0, i);
 
 	while (std::isspace(data[i]) && i < data.size())
@@ -38,20 +38,40 @@ void IrcServer::onNewData(std::size_t id, const std::string& data)
 	for (i = 0; i < 10; i++)
 	{
 		if (requestType == instruction[i])
-			break ;
+			break;
 	}
 	switch (i)
 	{
-	case 0: onJoinChannel(user, content); break;
-	case 1: onNick(user, content); break;
-	case 2: onPass(user, content); break;
-	case 3: onUser(user, content); break;
-	case 4: onQuit(user, content); break;
-	case 5: onPart(user, content); break;
-	case 6: onPrivmsg(user, content); break;
-	case 7: onNotice(user, content); break;
-	case 8: onMode(user, content); break;
-	case 9: onKick(user, content); break;
+	case 0:
+		onJoinChannel(user, content);
+		break;
+	case 1:
+		onNick(user, content);
+		break;
+	case 2:
+		onPass(user, content);
+		break;
+	case 3:
+		onUser(user, content);
+		break;
+	case 4:
+		onQuit(user, content);
+		break;
+	case 5:
+		onPart(user, content);
+		break;
+	case 6:
+		onPrivmsg(user, content);
+		break;
+	case 7:
+		onNotice(user, content);
+		break;
+	case 8:
+		onMode(user, content);
+		break;
+	case 9:
+		onKick(user, content);
+		break;
 	default:
 		std::cout << '\'' << requestType << "\' not handled" << std::endl;
 	}
@@ -64,7 +84,7 @@ void IrcServer::onClientDisconnect(std::size_t id)
 	onDisconnect(id);
 }
 
-std::string	grab_first_arg(const std::string& content)
+std::string grab_first_arg(const std::string &content)
 {
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
@@ -73,7 +93,7 @@ std::string	grab_first_arg(const std::string& content)
 	return (first_arg);
 }
 
-void IrcServer::onJoinChannel(User* user, const std::string& content)
+void IrcServer::onJoinChannel(User *user, const std::string &content)
 {
 	std::string channelName = grab_first_arg(content);
 	if (!joinChannel(user, channelName))
@@ -88,11 +108,11 @@ void IrcServer::onJoinChannel(User* user, const std::string& content)
 		return;
 	if (chanIt != _channelList.end())
 	{
-		std::vector<User*> users = chanIt->getUsers();
-		std::vector<User*>::iterator it = users.begin();
+		std::vector<User *> users = chanIt->getUsers();
+		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 		{
-			User* tmp = *it;
+			User *tmp = *it;
 			if (tmp == user)
 				continue;
 			sendTo(tmp->getId(), getMsgPrefix(user) + " JOIN :" + channelName);
@@ -101,13 +121,13 @@ void IrcServer::onJoinChannel(User* user, const std::string& content)
 	}
 }
 
-void IrcServer::onNick(User* from, const std::string& content)
+void IrcServer::onNick(User *from, const std::string &content)
 {
 	std::string nickname = grab_first_arg(content);
 	from->setNickname(nickname);
 }
 
-void IrcServer::onPass(User* user, const std::string& content)
+void IrcServer::onPass(User *user, const std::string &content)
 {
 	std::string pass = grab_first_arg(content);
 	if (password() == pass)
@@ -116,7 +136,7 @@ void IrcServer::onPass(User* user, const std::string& content)
 		std::cout << "Invalid password: " << pass << std::endl;
 }
 
-void IrcServer::onUser(User* user, const std::string& content)
+void IrcServer::onUser(User *user, const std::string &content)
 {
 	std::string username = grab_first_arg(content);
 	user->setUsername(username);
@@ -131,7 +151,7 @@ void IrcServer::onUser(User* user, const std::string& content)
 	sendTo(user->getId(), "PING :ft_irc");
 }
 
-void IrcServer::onQuit(User* user, const std::string& content)
+void IrcServer::onQuit(User *user, const std::string &content)
 {
 	std::string msg = grab_first_arg(content);
 	(void)msg;
@@ -140,7 +160,7 @@ void IrcServer::onQuit(User* user, const std::string& content)
 	onDisconnect(user->getId());
 }
 
-void IrcServer::onPart(User* user, const std::string& content)
+void IrcServer::onPart(User *user, const std::string &content)
 {
 	std::string::const_iterator it = content.begin();
 	std::vector<std::string> channels;
@@ -180,14 +200,14 @@ void IrcServer::onPart(User* user, const std::string& content)
 		std::list<Chanel>::iterator chanIt = findChannel(channels[i]);
 		if (chanIt == _channelList.end())
 			continue;
-		std::vector<User*> users = chanIt->getUsers();
-		std::vector<User*>::iterator it = users.begin();
+		std::vector<User *> users = chanIt->getUsers();
+		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 			sendTo((*it)->getId(), getMsgPrefix(user) + " PART " + channels[i] + " :" + message);
 	}
 }
 
-void IrcServer::onPrivmsg(User* user, const std::string& content)
+void IrcServer::onPrivmsg(User *user, const std::string &content)
 {
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
@@ -202,11 +222,11 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 	{
 		if (chanIt->isBanned(user->getUsername()))
 			return;
-		std::vector<User*> users = chanIt->getUsers();
-		std::vector<User*>::iterator it = users.begin();
+		std::vector<User *> users = chanIt->getUsers();
+		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 		{
-			User* tmp = *it;
+			User *tmp = *it;
 			if (tmp == user)
 				continue;
 			sendTo(tmp->getId(), getMsgPrefix(user) + " PRIVMSG " + dest + " :" + message);
@@ -219,12 +239,12 @@ void IrcServer::onPrivmsg(User* user, const std::string& content)
 	{
 		User userDest = *userIt;
 		sendTo(userDest.getId(), getMsgPrefix(user) + " PRIVMSG " + dest + " :" + message);
-		return ;
+		return;
 	}
 	std::cout << "user or channel not found: " << dest << std::endl;
 }
 
-void IrcServer::onNotice(User* user, const std::string& content)
+void IrcServer::onNotice(User *user, const std::string &content)
 {
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
@@ -239,11 +259,11 @@ void IrcServer::onNotice(User* user, const std::string& content)
 	{
 		if (chanIt->isBanned(user->getUsername()))
 			return;
-		std::vector<User*> users = chanIt->getUsers();
-		std::vector<User*>::iterator it = users.begin();
+		std::vector<User *> users = chanIt->getUsers();
+		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 		{
-			User* tmp = *it;
+			User *tmp = *it;
 			if (tmp == user)
 				continue;
 			sendTo(tmp->getId(), getMsgPrefix(user) + " NOTICE " + dest + " :" + message);
@@ -256,12 +276,12 @@ void IrcServer::onNotice(User* user, const std::string& content)
 	{
 		User userDest = *userIt;
 		sendTo(userDest.getId(), getMsgPrefix(user) + " NOTICE " + dest + " :" + message);
-		return ;
+		return;
 	}
 	std::cout << "user or channel not found: " << dest << std::endl;
 }
 
-void IrcServer::onMode(User* user, const std::string& content)
+void IrcServer::onMode(User *user, const std::string &content)
 {
 	std::size_t start;
 	std::size_t n = 0;
@@ -313,9 +333,18 @@ void IrcServer::onMode(User* user, const std::string& content)
 		return;
 	}
 	if (isPromote == 1)
+	{
 		chanIt->promoteUser(user, &*userIt);
+	}
 	else
 		chanIt->demoteUser(user, &*userIt);
+	std::vector<User *> users = chanIt->getUsers();
+	std::vector<User *>::iterator it = users.begin();
+	for (; it != users.end(); it++)
+	{
+		User *tmp = *it;
+		sendTo(tmp->getId(), getMsgPrefix(user) + " MODE " + channel + " " + action + " " + userStr);
+	}
 	(void)user;
 	//-------------DEBUG-----------------------
 	std::cout << "MODE:" << std::endl;
@@ -323,7 +352,6 @@ void IrcServer::onMode(User* user, const std::string& content)
 	std::cout << "action: " << action << '\'' << std::endl;
 	std::cout << "user: " << userStr << '\'' << std::endl;
 	//-----------------------------------------
-	
 }
 
 void IrcServer::onDisconnect(std::size_t id)
@@ -334,7 +362,7 @@ void IrcServer::onDisconnect(std::size_t id)
 		std::cout << "Couldn't find the user id " << id << " " << __FUNCTION__ << std::endl;
 		return;
 	}
-	User* user = &*it;
+	User *user = &*it;
 
 	std::list<Chanel>::iterator chanIt = _channelList.begin();
 	for (; chanIt != _channelList.end(); chanIt++)
@@ -350,7 +378,7 @@ void IrcServer::onDisconnect(std::size_t id)
 	}
 }
 
-void IrcServer::onKick(User* user, const std::string& content)
+void IrcServer::onKick(User *user, const std::string &content)
 {
 	std::size_t start;
 	std::size_t n = 0;
@@ -367,23 +395,22 @@ void IrcServer::onKick(User* user, const std::string& content)
 
 	if (content[n])
 		start = ++n;
-	std::string	message(content, start);
+	std::string message(content, start);
 	std::list<Chanel>::iterator chanIt = findChannel(channel);
 	if (chanIt == _channelList.end())
 	{
 		std::cout << "Channel not found " << channel << std::endl;
 		return;
 	}
-	if (chanIt->isOp(user) == false || chanIt->isInChannel(&*findUser(nickname)) == false 
-			|| &*findUser(nickname) == user)
-		return ;
+	if (chanIt->isOp(user) == false || chanIt->isInChannel(&*findUser(nickname)) == false || &*findUser(nickname) == user)
+		return;
 	if (chanIt != _channelList.end())
 	{
-		std::vector<User*> users = chanIt->getUsers();
-		std::vector<User*>::iterator it = users.begin();
+		std::vector<User *> users = chanIt->getUsers();
+		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 		{
-			User* tmp = *it;
+			User *tmp = *it;
 			sendTo(tmp->getId(), getMsgPrefix(user) + " KICK " + channel + " " + nickname + " :" + message);
 		}
 		chanIt->removeUser(&*findUser(nickname));
@@ -391,17 +418,16 @@ void IrcServer::onKick(User* user, const std::string& content)
 	}
 }
 
-std::string IrcServer::getMsgPrefix(User* user) const
+std::string IrcServer::getMsgPrefix(User *user) const
 {
 	std::string res(":" + user->getNickname() + "!" + user->getUsername());
 	return res;
 }
 
-
-std::list<Chanel>::iterator	IrcServer::findChannel(const std::string &name)
+std::list<Chanel>::iterator IrcServer::findChannel(const std::string &name)
 {
 	std::list<Chanel>::iterator it = _channelList.begin();
-	for(; it != _channelList.end(); it++)
+	for (; it != _channelList.end(); it++)
 	{
 		if (it->getName() == name)
 			return it;
@@ -409,11 +435,10 @@ std::list<Chanel>::iterator	IrcServer::findChannel(const std::string &name)
 	return _channelList.end();
 }
 
-
-std::list<User>::iterator	IrcServer::findUser(const std::size_t id)
+std::list<User>::iterator IrcServer::findUser(const std::size_t id)
 {
 	std::list<User>::iterator it = _userList.begin();
-	for(; it != _userList.end(); it++)
+	for (; it != _userList.end(); it++)
 	{
 		if (it->getId() == id)
 			return it;
@@ -421,10 +446,10 @@ std::list<User>::iterator	IrcServer::findUser(const std::size_t id)
 	return _userList.end();
 }
 
-std::list<User>::iterator	IrcServer::findUser(const std::string& name)
+std::list<User>::iterator IrcServer::findUser(const std::string &name)
 {
 	std::list<User>::iterator it = _userList.begin();
-	for(; it != _userList.end(); it++)
+	for (; it != _userList.end(); it++)
 	{
 		if (it->getNickname() == name)
 			return it;
@@ -436,7 +461,7 @@ std::list<User>::iterator	IrcServer::findUser(const std::string& name)
 ///                       COMMAND                                            ///
 ////////////////////////////////////////////////////////////////////////////////
 
-bool	IrcServer::joinChannel(User *user, const std::string &channel)
+bool IrcServer::joinChannel(User *user, const std::string &channel)
 {
 	if (channel[0] != '#' || channel.length() < 2)
 	{
