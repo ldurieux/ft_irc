@@ -203,7 +203,7 @@ void IrcServer::onPart(User *user, const std::string &content)
 		std::vector<User *> users = chanIt->getUsers();
 		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
-			sendTo((*it)->getId(), getMsgPrefix(user) + " PART " + channels[i] + " :" + message);
+			sendTo((*it)->getId(), getMsgPrefix(user) + " PART " + channels[i] + " " + message);
 	}
 }
 
@@ -345,13 +345,6 @@ void IrcServer::onMode(User *user, const std::string &content)
 		User *tmp = *it;
 		sendTo(tmp->getId(), getMsgPrefix(user) + " MODE " + channel + " " + action + " " + userStr);
 	}
-	(void)user;
-	//-------------DEBUG-----------------------
-	std::cout << "MODE:" << std::endl;
-	std::cout << "channel: " << channel << '\'' << std::endl;
-	std::cout << "action: " << action << '\'' << std::endl;
-	std::cout << "user: " << userStr << '\'' << std::endl;
-	//-----------------------------------------
 }
 
 void IrcServer::onDisconnect(std::size_t id)
