@@ -101,3 +101,8 @@ std::vector<User*> Chanel::getUsers() const
 	return res;
 }
 
+std::size_t Chanel::userCount() const
+{
+	return _userOfChanel.size();
+}
+

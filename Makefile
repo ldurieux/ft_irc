@@ -48,6 +48,7 @@ re : fclean
 		$(MAKE) ./ all
 
 -include $(DEPS)
+-include $(BOTDEPS)
 
 $(BUILDDIR)/%.o : %.cpp Makefile
 		@mkdir -p $(@D)

@@ -156,7 +156,6 @@ void IrcServer::onQuit(User *user, const std::string &content)
 	std::string msg = grab_first_arg(content);
 	(void)msg;
 
-	disconnectClient(user->getId());
 	onDisconnect(user->getId());
 }
 
@@ -204,6 +203,9 @@ void IrcServer::onPart(User *user, const std::string &content)
 		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
 			sendTo((*it)->getId(), getMsgPrefix(user) + " PART " + channels[i] + " " + message);
+		chanIt->removeUser(user);
+		if (chanIt->userCount() == 0)
+			_channelList.erase(chanIt);
 	}
 }
 
@@ -358,8 +360,14 @@ void IrcServer::onDisconnect(std::size_t id)
 	User *user = &*it;
 
 	std::list<Chanel>::iterator chanIt = _channelList.begin();
-	for (; chanIt != _channelList.end(); chanIt++)
+	for (; chanIt != _channelList.end();)
+	{
 		chanIt->removeUser(user);
+		if (chanIt->userCount() == 0)
+			chanIt = _channelList.erase(chanIt);
+		else
+			chanIt++;
+	}
 	std::list<User>::iterator userIt = _userList.begin();
 	for (; userIt != _userList.end(); userIt++)
 	{
@@ -456,7 +464,7 @@ std::list<User>::iterator IrcServer::findUser(const std::string &name)
 
 bool IrcServer::joinChannel(User *user, const std::string &channel)
 {
-	if (channel[0] != '#' || channel.length() < 2)
+	if ((channel.size() > 0 && channel[0] != '#') || channel.length() < 2)
 	{
 		std::cout << channel << " isn't a valid name" << std::endl;
 		return false;

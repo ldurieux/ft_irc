@@ -27,6 +27,7 @@ public:
 	bool	isInChannel(User* user);
 
 	std::vector<User*> getUsers() const;
+	std::size_t userCount() const;
 
 private:
 	std::string				_name;
