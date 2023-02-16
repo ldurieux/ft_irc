@@ -33,7 +33,7 @@ bool BaseClient::connectToHost(const std::string& hostStr, int port)
 	_pollFd.revents = 0;
 	_pollFd.events = POLLIN;
 
-	return fcntl(_fd, F_SETFL, fcntl(_fd, F_GETFL) | O_NONBLOCK) >= 0;
+	return fcntl(_fd, F_SETFL, O_NONBLOCK) >= 0;
 }
 
 void BaseClient::run()

@@ -56,7 +56,7 @@ void BaseServer::incomingConnection()
 		return;
 	}
 	//set the fd as non blocking
-	if (fcntl(fdClient, F_SETFL, fcntl(fdClient, F_GETFL) | O_NONBLOCK) == -1)
+	if (fcntl(fdClient, F_SETFL, O_NONBLOCK) == -1)
 	{
 		std::cout << "Couldn't set client fd as non-blocking" << std::endl;
 		return ;

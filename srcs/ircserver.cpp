@@ -42,36 +42,16 @@ void IrcServer::onNewData(std::size_t id, const std::string &data)
 	}
 	switch (i)
 	{
-	case 0:
-		onJoinChannel(user, content);
-		break;
-	case 1:
-		onNick(user, content);
-		break;
-	case 2:
-		onPass(user, content);
-		break;
-	case 3:
-		onUser(user, content);
-		break;
-	case 4:
-		onQuit(user, content);
-		break;
-	case 5:
-		onPart(user, content);
-		break;
-	case 6:
-		onPrivmsg(user, content);
-		break;
-	case 7:
-		onNotice(user, content);
-		break;
-	case 8:
-		onMode(user, content);
-		break;
-	case 9:
-		onKick(user, content);
-		break;
+	case 0: onJoinChannel(user, content); break;
+	case 1: onNick(user, content); break;
+	case 2: onPass(user, content); break;
+	case 3: onUser(user, content); break;
+	case 4: onQuit(user, content); break;
+	case 5: onPart(user, content); break;
+	case 6: onPrivmsg(user, content); break;
+	case 7: onNotice(user, content); break;
+	case 8: onMode(user, content); break;
+	case 9: onKick(user, content); break;
 	default:
 		std::cout << '\'' << requestType << "\' not handled" << std::endl;
 	}
@@ -124,21 +104,51 @@ void IrcServer::onJoinChannel(User *user, const std::string &content)
 void IrcServer::onNick(User *from, const std::string &content)
 {
 	std::string nickname = grab_first_arg(content);
+	if (nickname.empty())
+	{
+		std::cout << "nickname cannot be empty" << std::endl;
+		return;
+	}
+
+
+	std::list<User>::iterator it = _userList.begin();
+	for(; it != _userList.end(); ++it)
+	{
+		if (nickname == it->getNickname())
+		{
+			std::cout << "nickname " << nickname << " already in use" << std::endl;
+			return;
+		}
+	}
 	from->setNickname(nickname);
 }
 
 void IrcServer::onPass(User *user, const std::string &content)
 {
-	std::string pass = grab_first_arg(content);
-	if (password() == pass)
+	if (password() == content)
 		user->setAuthenticated(true);
 	else
-		std::cout << "Invalid password: " << pass << std::endl;
+		std::cout << "Invalid password: " << content << std::endl;
 }
 
 void IrcServer::onUser(User *user, const std::string &content)
 {
 	std::string username = grab_first_arg(content);
+	if (username.empty())
+	{
+		std::cout << "username cannot be empty" << std::endl;
+		return;
+	}
+
+	std::list<User>::iterator it = _userList.begin();
+	for(; it != _userList.end(); ++it)
+	{
+		if (username == it->getUsername())
+		{
+			std::cout << "username " << username << " already in use" << std::endl;
+			return;
+		}
+	}
 	user->setUsername(username);
 
 	if (!user->authenticated())
@@ -153,6 +163,8 @@ void IrcServer::onUser(User *user, const std::string &content)
 
 void IrcServer::onQuit(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::string msg = grab_first_arg(content);
 	(void)msg;
 
@@ -161,6 +173,8 @@ void IrcServer::onQuit(User *user, const std::string &content)
 
 void IrcServer::onPart(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::string::const_iterator it = content.begin();
 	std::vector<std::string> channels;
 	std::string message;
@@ -184,7 +198,10 @@ void IrcServer::onPart(User *user, const std::string &content)
 		}
 	}
 	if (it2 == content.end())
+	{
+		std::cout << "no leaving reason specified" << std::endl;
 		return;
+	}
 	it = it2;
 	while (*it != ':' && it != content.end())
 		it++;
@@ -198,7 +215,10 @@ void IrcServer::onPart(User *user, const std::string &content)
 	{
 		std::list<Chanel>::iterator chanIt = findChannel(channels[i]);
 		if (chanIt == _channelList.end())
+		{
+			std::cout << "channel " << channels[i] << " not found" << std::endl;
 			continue;
+		}
 		std::vector<User *> users = chanIt->getUsers();
 		std::vector<User *>::iterator it = users.begin();
 		for (; it != users.end(); it++)
@@ -211,11 +231,17 @@ void IrcServer::onPart(User *user, const std::string &content)
 
 void IrcServer::onPrivmsg(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
 	std::string dest(content, 0, n);
-	std::string message(content, n + 2, std::string::npos);
+	std::string message;
+	try { message = std::string(content, n + 2, std::string::npos); }
+	catch (...) {
+		return;
+	}
 
 	std::list<Chanel>::iterator chanIt = findChannel(dest);
 	if (chanIt->isInChannel(user) == false)
@@ -248,17 +274,23 @@ void IrcServer::onPrivmsg(User *user, const std::string &content)
 
 void IrcServer::onNotice(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
 		n++;
 	std::string dest(content, 0, n);
-	std::string message(content, n + 2, std::string::npos);
+	std::string message;
+	try { message = std::string(content, n + 2, std::string::npos); }
+	catch (...) {
+		return;
+	}
 
 	std::list<Chanel>::iterator chanIt = findChannel(dest);
-	if (chanIt->isInChannel(user) == false)
-		return;
 	if (chanIt != _channelList.end())
 	{
+		if (chanIt->isInChannel(user) == false)
+			return;
 		if (chanIt->isBanned(user->getUsername()))
 			return;
 		std::vector<User *> users = chanIt->getUsers();
@@ -285,6 +317,8 @@ void IrcServer::onNotice(User *user, const std::string &content)
 
 void IrcServer::onMode(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::size_t start;
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
@@ -381,6 +415,8 @@ void IrcServer::onDisconnect(std::size_t id)
 
 void IrcServer::onKick(User *user, const std::string &content)
 {
+	if (!user->authenticated())
+		return;
 	std::size_t start;
 	std::size_t n = 0;
 	while (n < content.length() && !std::isspace(content[n]))
@@ -464,6 +500,8 @@ std::list<User>::iterator IrcServer::findUser(const std::string &name)
 
 bool IrcServer::joinChannel(User *user, const std::string &channel)
 {
+	if (!user->authenticated())
+		return false;
 	if ((channel.size() > 0 && channel[0] != '#') || channel.length() < 2)
 	{
 		std::cout << channel << " isn't a valid name" << std::endl;
