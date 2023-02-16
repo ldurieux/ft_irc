@@ -244,10 +244,10 @@ void IrcServer::onPrivmsg(User *user, const std::string &content)
 	}
 
 	std::list<Chanel>::iterator chanIt = findChannel(dest);
-	if (chanIt->isInChannel(user) == false)
-		return;
 	if (chanIt != _channelList.end())
 	{
+		if (chanIt->isInChannel(user) == false)
+			return;
 		if (chanIt->isBanned(user->getUsername()))
 			return;
 		std::vector<User *> users = chanIt->getUsers();
