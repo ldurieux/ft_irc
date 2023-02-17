@@ -90,6 +90,7 @@ void BaseServer::incomingData(std::size_t i)
 		onClientDisconnect(_pollFds[i].fd);
 		close(_pollFds[i].fd);
 		_pollFds.erase(_pollFds.begin() + i);
+		_clientBuf.erase(_clientBuf.begin() + i - 1);
 		return;
 	}
 	//otherwise it's a message, so read everything available
